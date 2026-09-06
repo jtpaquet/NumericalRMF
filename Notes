@@ -1,6 +1,20 @@
-The simulation was run using these parameters:
-- lambda = 11.07
-- Nr = 64
-- dt = 0.001 or 6000 steps per periods
+Reference: Milroy 1999 Sec. III.A (lambda = 11.07, gamma = 14.9 / 16.6 / 18.2).
+See COMPARISON.md for the full comparison and for what changed and why.
 
-Takes ~5 min per value of gamma
+Current code
+  rmf_solver.py       solver (2nd order in r, vectorised)
+  run_milroy.py       the three reference cases -> all_results_corrected.pkl
+  plot.py             figures from a results pickle
+  validate_numerics.py  convergence + ablation study
+  study_thresholds.py   gamma_c and the expulsion threshold (Milroy Figs. 4, 6, 9)
+
+Production settings
+  lambda = 11.07, Nr = 64, dt = 0.002 (1571 steps/period), 200 periods
+  ~30 s per value of gamma
+  dt = 0.003 is unstable, and the limit tightens as gamma grows (0.002 fails
+  near gamma = 20); dt = 0.002 matches dt = 0.001 to five digits.
+  gamma = 14.9 needs ~200 periods to reach its steady alpha_s; 101 is not enough.
+
+Old code
+  nr32_fix.py produced all_results_Nr32_6283steps.pkl and
+  all_results_Nr64_6283steps_fine.pkl (dt = 0.001, gamma ramped over 3 periods).

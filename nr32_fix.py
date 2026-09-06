@@ -1,3 +1,6 @@
+# NOTE: kept as the provenance of all_results_Nr*_6283steps*.pkl.
+# The current solver is rmf_solver.py + run_milroy.py; see COMPARISON.md
+# for the numerical differences between the two.
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
