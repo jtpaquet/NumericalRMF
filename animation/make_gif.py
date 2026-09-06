@@ -1,3 +1,6 @@
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import paths
 import pickle
 import numpy as np
 import matplotlib
@@ -9,7 +12,7 @@ def make_mp4():
     # ------------------------------------------------
     # Load data
     # ------------------------------------------------
-    with open("all_results_Nr64_6283steps_fine.pkl", "rb") as f:
+    with open(paths.results("all_results_Nr64_6283steps_fine.pkl"), "rb") as f:
         all_results = pickle.load(f)
     
     snapshots = all_results[16.6]['snapshots']
@@ -41,7 +44,7 @@ def make_mp4():
     # ------------------------------------------------
     width, height = 500, 500  # matches figsize=(5,5) and dpi=100
     fps = 30
-    output_file = "field_lines_gam16p6.mp4"
+    output_file = paths.animation("field_lines_gam16p6.mp4")
 
     cmd = [
         "ffmpeg",
