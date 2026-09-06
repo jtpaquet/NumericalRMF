@@ -9,6 +9,7 @@ T_e = 5 eV  ->  lam = 11.07:
 """
 import pickle
 import numpy as np
+import paths
 from rmf_solver import RMFPenetration, gamma_c, tau_penetration, TWO_PI
 
 LAM = 11.07
@@ -33,6 +34,7 @@ def penetration_time(t, a, frac=0.95):
 
 
 def main(out='all_results_corrected.pkl'):
+    out = paths.results(out)
     gc = gamma_c(LAM)
     print(f'lambda = {LAM}   gamma_c = {gc:.3f} (Milroy Eq. 15); '
           f'expulsion threshold 1.12*lambda = {1.12*LAM:.3f} (Eq. 14)')

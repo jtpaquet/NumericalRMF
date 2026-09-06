@@ -10,6 +10,7 @@ not need any extra physics: gamma_c is a single number, and Milroy gives a
 closed-form fit for it.
 """
 import numpy as np
+import paths
 from rmf_solver import RMFPenetration, gamma_c, TWO_PI
 
 LAM = 11.07
@@ -55,7 +56,7 @@ def main():
 
     up = sweep(RMFPenetration(Nr=NR, lam=LAM, gam=0.0),
                np.arange(10.0, 16.51, 0.25), 'up  ')
-    np.savetxt('alpha_s_up.txt', up, header='gamma alpha_s')
+    np.savetxt(paths.results('alpha_s_up.txt'), up, header='gamma alpha_s')
 
     down_sim = RMFPenetration(Nr=NR, lam=LAM, gam=17.0)
     for _ in range(120):                       # get fully penetrated first
@@ -63,7 +64,7 @@ def main():
             down_sim.step(DT)
     print(f'\npenetrated at gamma=17.0: alpha_s={down_sim.alpha():.4f}\n')
     down = sweep(down_sim, np.arange(16.75, 9.99, -0.25), 'down')
-    np.savetxt('alpha_s_down.txt', down, header='gamma alpha_s')
+    np.savetxt(paths.results('alpha_s_down.txt'), down, header='gamma alpha_s')
 
     def threshold(rows, rising):
         """gamma at which alpha_s crosses 0.75, bracketed by the sweep step."""

@@ -48,7 +48,7 @@ papers. `COMPARISON.md` has the evidence for each item.
 ## Next
 
 - [ ] **5b. Remake the gamma_c figure.** `study_thresholds.py` exists and the
-  ascending branch is saved in `alpha_s_up.txt` (gamma = 10 to 16). The
+  ascending branch is saved in `results/alpha_s_up.txt` (gamma = 10 to 16). The
   descending branch died partway on a loaded machine, so the hysteresis loop is
   not plotted yet. Needs one clean run of both branches plus a figure to compare
   with Milroy's Figs. 4, 6 and 9. Expect penetration near 15.13 and expulsion
@@ -100,12 +100,24 @@ papers. `COMPARISON.md` has the evidence for each item.
 
 ## Housekeeping
 
-- [ ] Push the pending solver changes (the axis Hall factor-2 fix and the 95%
-  `t_pen` convention are in the working tree, not yet committed or pushed).
+- [x] Outputs moved out of the repo root into `results/` and `figures/`, routed
+  through `paths.py`. The duplicate 21 MB pickle under `animation/` is gone.
+
+- [ ] Fold the `scripts/` comparison runs into `COMPARISON.md` once they have
+  been run at full length.
 
 ---
 
 Note on item 1: the ramp was originally introduced because the run seemed to be
-unstable without it. Retested directly — the original scheme with `rise_time = 0`
+unstable without it. Retested directly - the original scheme with `rise_time = 0`
 runs fine at `Nr = 32` and `Nr = 64` for every `dt` that is stable *with* the
-ramp, so whatever was going wrong at the time was not the step start.
+ramp, so the step start is not what was failing.
+
+What *does* fail is the explicit scheme once the RMF has penetrated. At
+`Nr = 64`, `dt = 0.004` survives the whole approach and then blows up at period
+57 for `gamma = 16.6` and period 32 for `gamma = 18.2` - in both cases just after
+`alpha` reaches 1 - while `gamma = 14.9`, which never penetrates, never blows up.
+So the limit is set by the nonlinear Hall coupling at large `b`, not by the
+start-up transient, and the ramp only ever postponed it by postponing
+penetration. `scripts/*.py --dt-scan` reproduces this, and it is the argument for
+item 7b.

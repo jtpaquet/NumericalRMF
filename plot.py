@@ -15,6 +15,7 @@ Corrections relative to the first version of this script:
   * |B_theta(R)| comes from the boundary condition (A'(1) = 2 gamma e^{-i tau}
     - A(1)) instead of a one-sided difference.
 """
+import os
 import pickle
 import sys
 
@@ -22,10 +23,11 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
+import paths
 from rmf_solver import gamma_c
 from utils import plot_options
 
-PICKLE = sys.argv[1] if len(sys.argv) > 1 else 'all_results_corrected.pkl'
+PICKLE = sys.argv[1] if len(sys.argv) > 1 else paths.results('all_results_corrected.pkl')
 LAM = 11.07
 GAMMA_C = gamma_c(LAM)
 COLORS = {14.9: 'blue', 16.6: 'green', 18.2: 'red'}
@@ -37,6 +39,9 @@ XMAX = 80          # x-limit of the alpha(t) figure
 
 
 def load(fname):
+    """Load a results pickle; bare names are looked up under results/."""
+    if not os.path.isabs(fname) and not os.path.exists(fname):
+        fname = paths.results(fname)
     with open(fname, 'rb') as f:
         return pickle.load(f)
 
@@ -83,8 +88,9 @@ def fig_alpha(all_results, fname='alpha_vs_time.pdf'):
     ax.set_xlim(0, XMAX)
     ax.set_ylim(0, 1.2)
     plt.tight_layout()
-    plt.savefig(fname, bbox_inches='tight')
-    print(f'Saved {fname}')
+    out = paths.figure(fname)
+    plt.savefig(out, bbox_inches='tight')
+    print(f'Saved {out}')
 
 
 def fig_alpha_compare(new, old, fname='alpha_vs_time_comparison.pdf'):
@@ -111,8 +117,9 @@ def fig_alpha_compare(new, old, fname='alpha_vs_time_comparison.pdf'):
     ax.set_xlim(0, XMAX)
     ax.set_ylim(0, 1.2)
     plt.tight_layout()
-    plt.savefig(fname, bbox_inches='tight')
-    print(f'Saved {fname}')
+    out = paths.figure(fname)
+    plt.savefig(out, bbox_inches='tight')
+    print(f'Saved {out}')
 
 
 def fig_field_lines(all_results, gam):
@@ -141,8 +148,9 @@ def fig_field_lines(all_results, gam):
                  fr'$N_r$={res.get("Nr", "?")}', fontsize=36)
     plt.tight_layout()
     fname = f'field_lines_gam{gam}.pdf'
-    plt.savefig(fname, bbox_inches='tight')
-    print(f'Saved {fname}')
+    out = paths.figure(fname)
+    plt.savefig(out, bbox_inches='tight')
+    print(f'Saved {out}')
 
 
 def fig_profiles(all_results, gam):
@@ -180,8 +188,9 @@ def fig_profiles(all_results, gam):
                  fr'($\gamma/\gamma_c$={gam/GAMMA_C:.2f}), $\lambda$={LAM}')
     plt.tight_layout()
     fname = f'radial_profiles_gam{gam}.pdf'
-    plt.savefig(fname, dpi=150, bbox_inches='tight')
-    print(f'Saved {fname}')
+    out = paths.figure(fname)
+    plt.savefig(out, dpi=150, bbox_inches='tight')
+    print(f'Saved {out}')
 
 
 if __name__ == '__main__':
