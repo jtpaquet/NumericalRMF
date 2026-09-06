@@ -16,7 +16,9 @@ import os
 import pickle
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# studies/<name>/x.py -> repo root is two levels up
+sys.path.insert(0, os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__)))))
 
 import numpy as np
 
@@ -90,35 +92,86 @@ def figure(results, label, title, fname):
     plt.close('all')
 
 
-def main(label, legacy, rise_time, description):
-    ap = argparse.ArgumentParser(description=description)
+def execute(label, legacy, rise_time, nr, dt, periods, make_figure=True,
+            save=True, quiet=False):
+    """Run the three gammas for one configuration. Returns the results dict."""
+    results, unstable = {}, False
+    if not quiet:
+        print(f'{"gamma":>7} {"gamma/gc":>9} {"alpha_s":>9} {"t_pen":>8} '
+              f'{"Milroy alpha_s":>15} {"Milroy t_pen":>13}  status')
+    for gam in GAMMAS:
+        t, a, snaps, bad = run_case(gam, legacy, rise_time, nr, dt, periods)
+        results[gam] = dict(times=t, alphas=a, snapshots=snaps, lam=LAM, gam=gam,
+                            Nr=nr, dt=dt, rise_time=rise_time, legacy=legacy,
+                            blew_up_at=bad)
+        if bad is not None:
+            unstable = True
+            if not quiet:
+                print(f'{gam:7.1f} {gam/gamma_c(LAM):9.3f} {"-":>9} {"-":>8} '
+                      f'{"-":>15} {"-":>13}  BLEW UP at period {bad}')
+            continue
+        a_s = a[-1]
+        t_pen = penetration_time(t, a, 0.95) if a_s > 0.9 else float('nan')
+        m_t, m_a = MILROY[gam]
+        if not quiet:
+            print(f'{gam:7.1f} {gam/gamma_c(LAM):9.3f} {a_s:9.4f} {t_pen:8.1f} '
+                  f'{m_a:15.2f} {m_t if m_t else float("nan"):13.1f}  ok')
+
+    if save:
+        out = paths.results(f'alpha_{label}.pkl')
+        with open(out, 'wb') as f:
+            pickle.dump(results, f)
+        print(f'\n  wrote {out}')
+
+    if make_figure:
+        title = (fr'{"original" if legacy else "corrected"} scheme, '
+                 fr'$\tau_r$={rise_time/TWO_PI:.3g}$T$, '
+                 fr'$N_r$={nr}, $dt$={dt}')
+        figure(results, label, title, f'alpha_{label}')
+
+    if unstable:
+        print('\n  at least one gamma went unstable; try a smaller --dt, or '
+              '--dt-scan to find the limit')
+    return results
+
+
+def add_common_args(ap):
     ap.add_argument('--nr', type=int, default=32, help='radial points (default 32)')
     ap.add_argument('--dt', type=float, default=0.002, help='time step (default 0.002)')
     ap.add_argument('--periods', type=int, default=200,
                     help='RMF periods to run (default 200; gamma=14.9 needs ~200 '
                          'to settle)')
+    ap.add_argument('--no-figure', action='store_true')
+    return ap
+
+
+def header(description, scheme, rise_time, nr):
+    print(f'{description}\n')
+    print(f'  scheme     : {scheme}')
+    print(f'  rise_time  : {rise_time:.4g} ({rise_time/TWO_PI:.3g} RMF periods)')
+    print(f'  lambda     : {LAM}   gamma_c = {gamma_c(LAM):.3f} (Milroy Eq. 15)')
+    print(f'  Nr         : {nr}')
+
+
+def main(label, legacy, rise_time, description):
+    ap = add_common_args(argparse.ArgumentParser(description=description))
     ap.add_argument('--dt-scan', type=float, nargs='+', metavar='DT',
                     help='stability sweep: run each dt and report where it blows '
                          'up. Note the explicit scheme goes unstable *after* the '
                          'RMF has penetrated, not at start-up, so the sweep needs '
                          'enough periods to get past penetration - use at least '
                          '--periods 60. No pickle or figure is written.')
-    ap.add_argument('--no-figure', action='store_true')
     args = ap.parse_args()
 
     scheme = 'legacy (nr32_fix.py)' if legacy else 'corrected (rmf_solver.py)'
-    print(f'{description}\n')
-    print(f'  scheme     : {scheme}')
-    print(f'  rise_time  : {rise_time:.4g} '
-          f'({rise_time/TWO_PI:.3g} RMF periods)')
-    print(f'  lambda     : {LAM}   gamma_c = {gamma_c(LAM):.3f} (Milroy Eq. 15)')
-    print(f'  Nr         : {args.nr}')
+    header(description, scheme, rise_time, args.nr)
 
     if args.dt_scan:
         print(f'  periods    : {args.periods}\n')
         print('  (the explicit scheme fails after penetration, not at start-up,')
         print('   so a short sweep will report everything as stable)\n')
-        print(f'{"dt":>9} {"gamma":>7} {"stable":>8} {"blew up at":>12} {"alpha_end":>10}')
+        print(f'{"dt":>9} {"gamma":>7} {"stable":>8} {"blew up at":>12} '
+              f'{"alpha_end":>10}')
         for dt in args.dt_scan:
             for gam in GAMMAS:
                 _, a, _, bad = run_case(gam, legacy, rise_time, args.nr, dt,
@@ -130,38 +183,5 @@ def main(label, legacy, rise_time, description):
 
     print(f'  dt         : {args.dt} ({int(round(TWO_PI/args.dt))} steps/period)')
     print(f'  periods    : {args.periods}\n')
-
-    results, unstable = {}, False
-    print(f'{"gamma":>7} {"gamma/gc":>9} {"alpha_s":>9} {"t_pen":>8} '
-          f'{"Milroy alpha_s":>15} {"Milroy t_pen":>13}  status')
-    for gam in GAMMAS:
-        t, a, snaps, bad = run_case(gam, legacy, rise_time, args.nr, args.dt,
-                                    args.periods)
-        results[gam] = dict(times=t, alphas=a, snapshots=snaps, lam=LAM, gam=gam,
-                            Nr=args.nr, dt=args.dt, rise_time=rise_time,
-                            legacy=legacy, blew_up_at=bad)
-        if bad is not None:
-            unstable = True
-            print(f'{gam:7.1f} {gam/gamma_c(LAM):9.3f} {"-":>9} {"-":>8} '
-                  f'{"-":>15} {"-":>13}  BLEW UP at period {bad}')
-            continue
-        a_s = a[-1]
-        t_pen = penetration_time(t, a, 0.95) if a_s > 0.9 else float('nan')
-        m_t, m_a = MILROY[gam]
-        print(f'{gam:7.1f} {gam/gamma_c(LAM):9.3f} {a_s:9.4f} {t_pen:8.1f} '
-              f'{m_a:15.2f} {m_t if m_t else float("nan"):13.1f}  ok')
-
-    out = paths.results(f'alpha_{label}.pkl')
-    with open(out, 'wb') as f:
-        pickle.dump(results, f)
-    print(f'\n  wrote {out}')
-
-    if not args.no_figure:
-        title = (fr'{"original" if legacy else "corrected"} scheme, '
-                 fr'$\tau_r$={rise_time/TWO_PI:.3g}$T$, '
-                 fr'$N_r$={args.nr}, $dt$={args.dt}')
-        figure(results, label, title, f'alpha_{label}')
-
-    if unstable:
-        print('\n  at least one gamma went unstable; try a smaller --dt, or '
-              '--dt-scan to find the limit')
+    execute(label, legacy, rise_time, args.nr, args.dt, args.periods,
+            make_figure=not args.no_figure)

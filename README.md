@@ -122,7 +122,7 @@ utils.py               matplotlib style
 nr32_fix.py            the original script, kept as the provenance of
                        results/all_results_Nr*.pkl
 
-scripts/               alpha(t) runs, one per scheme x ramp combination
+studies/               numbered studies (see below)
 animation/             mp4 generation
 articles/              the source papers
 results/               pickles and tabulated data       (all outputs land here)
@@ -140,10 +140,12 @@ python validate_numerics.py
 python study_thresholds.py
 ```
 
-### `scripts/` — scheme and ramp comparison
+## Studies
 
-Four runs of alpha(t) for gamma = 14.9, 16.6, 18.2 that differ only in the
-discretisation and the turn-on ramp, so each effect can be isolated:
+### 1 — `studies/study1_alpha_penetration/` : alpha vs time, penetration tests
+
+alpha(t) for gamma = 14.9, 16.6, 18.2, in four configurations that differ only
+in the discretisation and the turn-on ramp, so each effect can be isolated:
 
 | script | discretisation | `rise_time` |
 |---|---|---|
@@ -151,18 +153,49 @@ discretisation and the turn-on ramp, so each effect can be isolated:
 | `2_legacy_ramp3.py` | original | 3 T |
 | `3_fixed_ramp0.py` | corrected (`rmf_solver.py`) | 0 |
 | `4_fixed_ramp3.py` | corrected | 3 T |
+| `5_all_tests.py` | runs all four and overlays them, one panel per gamma | |
 
 Each writes `results/alpha_<label>.pkl` and `figures/alpha_<label>.{pdf,png}`,
-and prints alpha_s and t_pen against Milroy's numbers. Common options:
-`--nr`, `--dt`, `--periods`, `--no-figure`, and
+and prints alpha_s and t_pen against Milroy's numbers. Common options `--nr`,
+`--dt`, `--periods`, `--no-figure`, plus on the first four
 
 ```
-python scripts/1_legacy_ramp0.py --dt-scan 0.004 0.003 0.002 0.001 --periods 60
+python 1_legacy_ramp0.py --dt-scan 0.004 0.003 0.002 0.001 --periods 60
 ```
 
 which reports, per gamma, whether the run stayed finite and at which period it
-blew up. Note the explicit scheme fails *after* the RMF has penetrated, not at
-start-up, so a scan shorter than ~60 periods will report everything as stable.
+blew up. The explicit scheme fails *after* the RMF has penetrated, not at
+start-up, so a scan shorter than ~60 periods reports everything as stable.
+
+### 2 — `studies/study2_gamma_c_vs_lambda/` : Milroy Fig. 4
+
+`gamma_c_scan.py` finds the critical gamma for full penetration at each lambda
+by bisection on cold starts (corrected scheme, `rise_time = 0`), and
+`plot_gamma_c.py` plots it against Milroy's Eqs. (14) and (15).
+
+Resolution and time step are chosen per lambda (`Nr ~ 8 lambda` to resolve the
+skin depth, `dt` from the Hall/whistler limit `~dr^2`), and the time budget is
+`--tmax-factor * lambda^2` RMF periods, which makes the finite-budget bias in
+gamma_c independent of lambda — about 0.6% high at the default.
+
+The cost goes as **lambda^4** (`Nr ~ lambda`, `dt ~ dr^2`, `T_max ~ lambda^2`),
+so start with
+
+```
+python gamma_c_scan.py --dry-run
+```
+
+which prints the plan and the step count per lambda without running anything.
+lambda <= 20 is comfortable, 25-40 runs into hours, and lambda >= 50 is out of
+reach with the explicit integrator — that is what the semi-implicit scheme
+(TODO 7b) would buy. Results are appended to `results/gamma_c_vs_lambda.csv` as
+they are produced and `--resume` skips lambdas already there, so the scan can be
+stopped and restarted:
+
+```
+python gamma_c_scan.py --lam-max 20
+python plot_gamma_c.py
+```
 
 ## Where it stands
 
