@@ -1,0 +1,6 @@
+The simulation was run using these parameters:
+- lambda = 11.07
+- Nr = 64
+- dt = 0.001 or 6000 steps per periods
+
+Takes ~5 min per value of gamma
