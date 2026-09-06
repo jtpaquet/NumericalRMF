@@ -92,7 +92,7 @@ def figure(results, label, title, fname):
 
 def main(label, legacy, rise_time, description):
     ap = argparse.ArgumentParser(description=description)
-    ap.add_argument('--nr', type=int, default=64, help='radial points (default 64)')
+    ap.add_argument('--nr', type=int, default=32, help='radial points (default 32)')
     ap.add_argument('--dt', type=float, default=0.002, help='time step (default 0.002)')
     ap.add_argument('--periods', type=int, default=200,
                     help='RMF periods to run (default 200; gamma=14.9 needs ~200 '
