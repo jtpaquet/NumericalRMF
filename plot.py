@@ -87,6 +87,34 @@ def fig_alpha(all_results, fname='alpha_vs_time.pdf'):
     print(f'Saved {fname}')
 
 
+def fig_alpha_compare(new, old, fname='alpha_vs_time_comparison.pdf'):
+    """alpha(t) before and after the numerical corrections, against Milroy."""
+    fig, ax = plt.subplots(figsize=(14, 8))
+    for gam in sorted(new):
+        c = COLORS.get(gam)
+        if gam in old:
+            ax.plot(old[gam]['times'], old[gam]['alphas'], color=c, lw=1.6, ls='--',
+                    alpha=0.65,
+                    label='original scheme' if gam == min(new) else None)
+        ax.plot(new[gam]['times'], new[gam]['alphas'], color=c, lw=2.4,
+                label=fr'$\gamma$={gam} ($\gamma/\gamma_c$={gam/GAMMA_C:.2f})')
+        t_pen, a_s = MILROY[gam]
+        ax.scatter([t_pen if t_pen else XMAX], [a_s], color=c, s=220, marker='*',
+                   zorder=5, edgecolors='k', linewidths=0.6,
+                   label='Milroy 1999' if gam == min(new) else None)
+    ax.axhline(1.0, color='k', ls=':', alpha=0.5)
+    ax.set_xlabel('Time (RMF periods)')
+    ax.set_ylabel(r'Penetration Factor $\alpha$')
+    ax.set_title(r'$\lambda$=11.07, $N_r$=64; dashed = original scheme', fontsize=22)
+    ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.0)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0, XMAX)
+    ax.set_ylim(0, 1.2)
+    plt.tight_layout()
+    plt.savefig(fname, bbox_inches='tight')
+    print(f'Saved {fname}')
+
+
 def fig_field_lines(all_results, gam):
     res = all_results[gam]
     r_plot = np.linspace(0.0, 1.0, 200)
@@ -164,6 +192,10 @@ if __name__ == '__main__':
     all_results = load(PICKLE)
     print(f'gamma_c({LAM}) = {GAMMA_C:.3f}')
     fig_alpha(all_results)
+    try:
+        fig_alpha_compare(all_results, load('all_results_legacy_Nr64.pkl'))
+    except FileNotFoundError:
+        print('no all_results_legacy_Nr64.pkl; skipping the before/after figure')
     for gam in sorted(all_results):
         fig_field_lines(all_results, gam)
         fig_profiles(all_results, gam)

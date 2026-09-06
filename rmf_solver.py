@@ -56,12 +56,20 @@ first-order choices of the original ``nr32_fix.py`` so the two can be compared
                   source there entirely although (1/r) dP/dr -> P''(0) is finite.
                   alpha is measured at r = 0, so both errors bias it low.
 
-``rise_time`` switches on a gamma(t) = gamma (1 - exp(-t/rise_time)) ramp.
-Milroy applies the RMF as a step at t = 0, so the default is 0.
+``rise_time`` switches on the RF turn-on ramp gamma(t) = gamma (1 - exp(-t/tau_r))
+of Hugrass & Grimm 1981 Eq. (3).  It is a real feature of their model -- tau_r is
+"characteristic of the RF source" -- but their value is small: tau_r = 0.4 us at
+omega = 5e6 /s, i.e. omega*tau_r = 2.0, or 0.32 of an RMF period (RISE_TIME_HG1981
+below).  Milroy 1999 drops it and applies the RMF as a step at t = 0, so the
+default here is 0; at the Hugrass & Grimm value the penetration time moves by
+0.4 T, while at 3 T it moves by 6 T.  See ``validate_numerics.ramp()``.
 """
 import numpy as np
 
 TWO_PI = 2.0*np.pi
+
+# Hugrass & Grimm 1981: tau_r = 0.4 us at omega = 5e6 /s, in units of 1/omega
+RISE_TIME_HG1981 = 2.0
 
 
 def gamma_c(lam):

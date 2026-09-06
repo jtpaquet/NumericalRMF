@@ -5,12 +5,59 @@ the corrected one, so the effect on the comparison with Milroy 1999 Sec. III.A
 can be attributed rather than guessed at.
 """
 import numpy as np
-from scipy.special import j1
+from scipy.special import j1, iv
 from rmf_solver import RMFPenetration, gamma_c, TWO_PI
 from run_milroy import penetration_time
 
 LEGACY = dict(A_op='naive', bc_order=1, b_scheme='legacy', rise_time=3*TWO_PI)
 FIXED = dict(A_op='flux', bc_order=2, b_scheme='fv', rise_time=0.0)
+
+
+def linear_limit(lam=11.07, gam=1e-3, n_periods=40, dt=0.002):
+    """Check against the analytic small-gamma solution.
+
+    Hugrass 1985 Eq. (20)-(21) (also Jones & Hugrass 1981): as gamma -> 0 the
+    Hall term drops out and the steady n=1 flux obeys
+        A'' + A'/r - A/r^2 + 2 i lam^2 A = 0,     A(1) + A'(1) = 2 gamma
+    whose solution is  A = 2 gamma I1(k r) / (k I0(k)),  k = (1 - i) lam.
+    (Hugrass writes -2i lam^2 because his phasor is e^{+i(wt-theta)}; ours is
+    the complex conjugate convention, hence k = (1-i) lam rather than (1+i) lam.)
+
+    This exercises the radial operator and the r = 1 boundary condition together,
+    with no free parameters.
+    """
+    k = (1 - 1j)*lam
+    print(f'\n== linear limit vs Hugrass 1985 Eq. (21), lambda = {lam} ==')
+    print(f'{"Nr":>6} {"legacy L2":>12} {"|A(1)|/exact":>13} '
+          f'{"corrected L2":>13} {"|A(1)|/exact":>13}')
+    for Nr in (16, 32, 64, 128):
+        row = []
+        for legacy in (True, False):
+            s = RMFPenetration(Nr=Nr, lam=lam, gam=gam, legacy=legacy, rise_time=0.0)
+            s.run(n_periods=n_periods, dt=dt)
+            A = s.A*np.exp(1j*s.tau)                # strip the e^{-i t} of the drive
+            ex = 2*gam*iv(1, k*s.r)/(k*iv(0, k))
+            row += [np.sqrt(np.mean(np.abs(A - ex)**2))/np.abs(ex).max(),
+                    abs(A[-1])/abs(ex[-1])]
+        print(f'{Nr:6d} {row[0]:12.3e} {row[1]:13.5f} {row[2]:13.3e} {row[3]:13.5f}')
+
+
+def ramp(gam=16.6, Nr=64, n_periods=70, dt=0.002):
+    """How much the RF turn-on ramp costs.
+
+    Hugrass & Grimm 1981 Eq. (3) applies B_w(t) = (1 - e^{-t/tau_r}) B_w with
+    tau_r = 0.4 us at omega = 5e6 /s, i.e. omega*tau_r = 2.0 = 0.32 RMF periods.
+    Milroy 1999 applies the RMF as a step at t = 0 instead.
+    """
+    print(f'\n== gamma = {gam}: cost of the turn-on ramp ==')
+    print(f'{"rise_time":24} {"t(0.9 alpha_s)":>15} {"alpha_s":>9}')
+    for name, rt in (('0 (Milroy, step)', 0.0),
+                     ('0.32 T (H&G 1981)', 2.0),
+                     ('1 T', TWO_PI),
+                     ('3 T (original code)', 3*TWO_PI)):
+        s = RMFPenetration(Nr=Nr, gam=gam, rise_time=rt)
+        t, a, _ = s.run(n_periods=n_periods, dt=dt)
+        print(f'{name:24} {penetration_time(t, a, 0.9):15.1f} {a[-1]:9.4f}')
 
 
 def operator_order():
@@ -65,6 +112,8 @@ def grid_convergence(gam=14.9, n_periods=250, dt=0.002):
 
 
 if __name__ == '__main__':
+    linear_limit()
     operator_order()
+    ramp()
     ablation()
     grid_convergence()

@@ -15,6 +15,19 @@ Production settings
   near gamma = 20); dt = 0.002 matches dt = 0.001 to five digits.
   gamma = 14.9 needs ~200 periods to reach its steady alpha_s; 101 is not enough.
 
+The rise time
+  The gamma(t) = gamma (1 - exp(-t/tau_r)) ramp is Hugrass & Grimm 1981 Eq. (3),
+  so it is a real part of their model, but their tau_r = 0.4 us at omega = 5e6/s
+  is omega*tau_r = 2.0, i.e. 0.32 of an RMF period, not 3 periods. Milroy drops
+  it entirely. At 0.32 T it costs 0.4 T of penetration time; at 3 T it costs 6 T.
+  rmf_solver.RISE_TIME_HG1981 holds their value; the default is 0 (Milroy).
+
+Data
+  all_results_corrected.pkl     current scheme, Nr=64, 200 periods
+  all_results_legacy_Nr64.pkl   old scheme at the same Nr and duration, for the
+                                before/after figure
+  alpha_s_up.txt                ascending gamma sweep (Milroy Fig. 6 / Eq. 18)
+
 Old code
   nr32_fix.py produced all_results_Nr32_6283steps.pkl and
   all_results_Nr64_6283steps_fine.pkl (dt = 0.001, gamma ramped over 3 periods).
