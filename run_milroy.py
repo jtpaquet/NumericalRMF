@@ -23,8 +23,8 @@ MILROY = {14.9: dict(alpha_s=0.42, t_pen=None),
           18.2: dict(alpha_s=0.98, t_pen=27)}
 
 
-def penetration_time(t, a, frac=0.9):
-    """First time alpha reaches frac of its final value (linearly interpolated)."""
+def penetration_time(t, a, frac=0.95):
+    """First time alpha reaches frac of alpha_s, with alpha_s = the last value."""
     thr = frac*a[-1]
     if a.max() < thr:
         return np.nan
@@ -46,7 +46,7 @@ def main(out='all_results_corrected.pkl'):
                             lam=LAM, gam=gam, Nr=NR, dt=DT)
         ref = MILROY[gam]
         # only meaningful once the RMF actually penetrates
-        tp = penetration_time(t, a) if a[-1] > 0.9 else np.nan
+        tp = penetration_time(t, a) if a[-1] > 0.9 else np.nan  # 95% of alpha_s
         eq17 = tau_penetration(LAM, gam)
         print(f'gamma={gam:5.1f}  gamma/gamma_c={gam/gc:5.3f}   '
               f'alpha_s={a[-1]:.3f} (Milroy {ref["alpha_s"]:.2f})   '

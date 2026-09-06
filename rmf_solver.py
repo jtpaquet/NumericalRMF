@@ -163,7 +163,13 @@ class RMFPenetration:
         rb = np.zeros(N)
         if self.b_scheme == 'fv':
             # flux G = r b' + P/(2 lam^2) ;  db/dt = (1/(2 lam^2)) div G
-            G = self.rh*(b[1:] - b[:-1])/dr + 0.5*(P[1:] + P[:-1])/(2*self.lam2)
+            Ph = 0.5*(P[1:] + P[:-1])
+            # P ~ r^2 at the axis (A ~ c r + e r^3 makes P = Im(L[A] conj(A))
+            # quadratic with P(0) = P'(0) = 0), so the arithmetic mean is exactly
+            # twice the true P(dr/2) = P_1/4 on the first face.  Everywhere else
+            # P is smooth and the mean is second order.
+            Ph[0] = 0.25*P[1]
+            G = self.rh*(b[1:] - b[:-1])/dr + Ph/(2*self.lam2)
             rb[0] = G[0]/(2*self.lam2*self.V[0])     # G(-1/2) = 0 by symmetry
             rb[1:-1] = (G[1:] - G[:-1])/(2*self.lam2*self.V[1:-1])
         else:
