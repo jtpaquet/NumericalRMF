@@ -47,12 +47,16 @@ papers. `COMPARISON.md` has the evidence for each item.
 
 ## Next
 
-- [ ] **5b. Remake the gamma_c figure.** `study_thresholds.py` exists and the
-  ascending branch is saved in `results/alpha_s_up.txt` (gamma = 10 to 16). The
-  descending branch died partway on a loaded machine, so the hysteresis loop is
-  not plotted yet. Needs one clean run of both branches plus a figure to compare
-  with Milroy's Figs. 4, 6 and 9. Expect penetration near 15.13 and expulsion
-  near `1.12 lambda = 12.40`.
+- [ ] **5b. gamma_c vs lambda (Milroy Fig. 4).** Study 2 is written
+  (`studies/study2_gamma_c_vs_lambda/`) but not yet run. Cost goes as lambda^4,
+  so lambda <= 20 is comfortable, 25-40 is hours, and lambda >= 50 needs item 7b
+  first. Run `--dry-run` for the plan before committing to a scan.
+
+- [ ] **5c. Hysteresis loop (Milroy Fig. 9).** `study_thresholds.py` has the
+  ascending branch saved in `results/alpha_s_up.txt` (gamma = 10 to 16); the
+  descending branch died partway on a loaded machine. One clean run of both gives
+  the expulsion threshold, expected near `1.12 lambda = 12.40` at
+  lambda = 11.07.
 
 - [ ] **7b. Semi-implicit time integration.** Crank-Nicolson on the linear
   diffusion (tridiagonal solve) with the Hall term explicit. Both Hugrass & Grimm
@@ -103,8 +107,12 @@ papers. `COMPARISON.md` has the evidence for each item.
 - [x] Outputs moved out of the repo root into `results/` and `figures/`, routed
   through `paths.py`. The duplicate 21 MB pickle under `animation/` is gone.
 
-- [ ] Fold the `scripts/` comparison runs into `COMPARISON.md` once they have
-  been run at full length.
+- [x] Scripts grouped under `studies/study1_alpha_penetration/`, with
+  `5_all_tests.py` added to run all four and overlay them.
+
+- [ ] Fold the study 1 runs into `COMPARISON.md` now that they have been run at
+  full length (Nr = 32, dt = 0.002, nothing unstable; fixed_ramp0 closest to
+  Milroy).
 
 ---
 
