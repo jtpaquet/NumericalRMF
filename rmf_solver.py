@@ -32,7 +32,21 @@ gives the closed pair actually integrated here
 
     L[A] = A'' + A'/r - A/r^2 = d/dr [ (1/r) d/dr (r A) ]
 
-with A(0) = 0, b'(0) = 0 and b(1) = B_z0 = 0.
+with A(0) = 0, b'(0) = 0 and b(1) = B_z0, held fixed by an external DC bias
+field/flux conserver (``bz0`` below; default 0, Milroy's case -- see TODO.md
+item 8). b starts at the same uniform B_z0 (the bias field is established
+before the RMF turns on), so alpha = b(1) - b(0) is 0 at t = 0 regardless of
+bz0.
+
+Note: bz0 has *no effect on alpha, or on A or b up to an additive constant,
+for any lambda or gamma* -- every b-dependent term in ``rhs()`` (the Hall
+coupling in dA/dt, and the whole of db/dt) uses a derivative of b, never b
+itself, so b(1) = bz0 is an exact relabelling: b(r, t; bz0) = b(r, t; 0) +
+bz0 identically. Confirmed to float round-off in
+studies/study4_dc_bias_field/, which was the point of adding this parameter
+-- it was the natural next step for study 3's DC-bias-field/RMF-handedness
+coupling asymmetry, and it does not reproduce it (nor can it, in this
+truncation -- see that study's README section for what would be needed).
 
 Numerics
 --------
@@ -93,10 +107,12 @@ def tau_penetration(lam, gam):
 
 class RMFPenetration:
     def __init__(self, Nr=64, lam=11.07, gam=16.6, rise_time=0.0,
-                 legacy=False, A_op=None, bc_order=None, b_scheme=None):
+                 legacy=False, A_op=None, bc_order=None, b_scheme=None,
+                 bz0=0.0):
         self.Nr, self.lam, self.gam = Nr, lam, gam
         self.lam2, self.lam4 = lam**2, lam**4
         self.rise_time = rise_time
+        self.bz0 = bz0
         self.A_op = A_op if A_op else ('naive' if legacy else 'flux')
         self.bc_order = bc_order if bc_order else (1 if legacy else 2)
         self.b_scheme = b_scheme if b_scheme else ('legacy' if legacy else 'fv')
@@ -107,7 +123,7 @@ class RMFPenetration:
         self.V = self.r*self.dr                      # finite-volume weights
         self.V[0] = self.dr**2/8.0                   # axial half cell
         self.A = np.zeros(Nr, dtype=complex)
-        self.b = np.zeros(Nr)
+        self.b = np.full(Nr, bz0)                    # bias field, pre-established
         self.tau = 0.0
 
     # ------------------------------------------------------------------ drive
@@ -183,7 +199,7 @@ class RMFPenetration:
         A[0] = 0.0
         if self.bc_order == 1:
             A[-1] = (2*self.drive(tau) + A[-2]/self.dr)/(1.0 + 1.0/self.dr)
-        b[-1] = 0.0                                   # B_z(R) = B_z0 = 0
+        b[-1] = self.bz0                              # B_z(R) = B_z0, external bias
         return A, b
 
     # ---------------------------------------------------------- time stepping

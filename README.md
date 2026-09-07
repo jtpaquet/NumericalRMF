@@ -296,6 +296,52 @@ the bias field is reversed) is a first-order effect this radial, bias-field-
 free model cannot represent at all, so some of what gets read as "`T_e`" here
 is really that missing physics.
 
+### 4 — `studies/study4_dc_bias_field/` : does an external B_z0 explain the reversal asymmetry?
+
+Study 3's real shots showed a first-order effect its linear-regime model couldn't
+address at all: weaker DC bias field (higher added-resistance) coupled fast and
+deep, stronger bias field (0-2 Ω) coupled slow and only partially (sometimes
+relaxing back toward vacuum mid-shot), and the whole effect vanished when the
+bias polarity was reversed -- classic FRC field-reversal phenomenology. The
+natural next step was to stop hardcoding `b(1) = B_z0 = 0` (TODO item 8) and
+see whether a nonzero boundary value reproduces it.
+
+It doesn't, and not for a numerical reason. `rmf_solver.py` now takes a `bz0`
+argument and applies it at the boundary, but every term that touches `b` in
+`rhs()` -- the Hall-coupling `dbdr(b)` in `dA/dt`, and the differences that
+make up the whole of `db/dt` -- uses a *gradient* of `b`, never `b` itself. So
+`b(1) = bz0` is a pure relabelling: the solution shifts uniformly by `bz0` and
+`alpha = |b(1) - b(0)|` cannot depend on it, for any `lambda`, `gamma`, or
+time. `1_bz0_invariance.py` checks this against the actual solver rather than
+just the algebra: at Milroy's `lambda = 11.07` and his three reference gammas
+(one sub-critical, two super-critical), `alpha(t)` at `bz0` in
+`{0.05, 0.3, -0.3, 1, -1}` matches `bz0 = 0` to float round-off (`~1e-14`) at
+every point of a 60-period run (`figures/study4_bz0_invariance.pdf`).
+
+```
+python 1_bz0_invariance.py
+```
+
+There is a related but genuine asymmetry buried in the equations: conjugating
+`A` and negating `b` maps a solution at `(bz0, gamma e^{-i tau})` to one at
+`(-bz0, gamma e^{+i tau})`, so flipping the bias field *without* also
+reversing the RMF's rotation sense is not a symmetry of this system in
+general -- but it's moot here, since `bz0` already drops out of the dynamics
+entirely regardless of sign.
+
+**This makes the study 3 caveat more precise, not just confirmed.** It isn't
+that this radial model *probably* lacks the physics; wiring `B_z0` into the
+existing boundary condition literally cannot change this model's output, by
+construction. Real FRC field reversal is a statement about magnetic-null
+topology along the axis -- something an infinite, translationally-invariant
+cylinder with only the `n=0` (axial, `r`-only) and `n=1` (transverse) harmonics
+structurally cannot represent, independent of what boundary value is chosen.
+Testing the reversal-asymmetric-coupling hypothesis for real would need actual
+axial structure (finite length, end effects) or a force-balance equation where
+the *absolute* value of `B_z` enters, not just its gradient -- both well beyond
+the fixed-ion, Ohm's-law-only reduction used throughout this project. Left as
+future work; TODO.md is updated accordingly.
+
 ## Where it stands
 
 `lambda = 11.07`, `Nr = 64`, both schemes run to 200 T so the comparison is like
