@@ -268,6 +268,34 @@ the same way: **the 1-50 ms coupling time this device sees is most likely the
 avalanche's own statistical growth time**, not RMF field diffusion (linear or
 nonlinear) into an already-formed plasma.
 
+**Real shots.** `data/env_diff/*.csv` (30 shots, provenance in
+`6_load_experimental_data.py`) are bdot-probe vs. Rogowski-inferred envelope
+pairs at the chamber centre: `bdot_x/z_env` is the actually-measured field,
+`B_rog_x/z_env` is what that field would be from the driven antenna current
+alone (a shot-by-shot, dynamically measured `B_w` -- it tracks the antenna
+loading down once the plasma couples, unlike the fixed 6 G no-plasma value
+used above). Their ratio is exactly the model's `br0_over_bw(lambda)`
+(the `gamma -> 0` limit, `device.py`) at the plasma's real, unknown `T_e`.
+
+```
+python 6_load_experimental_data.py   # per-shot ratio, coupling time, inferred Te
+python 7_plot_experimental.py        # inferred Te and coupling time vs p and ohm
+```
+
+The 90%-of-plateau coupling time rises from ~1.6 ms at 7-22 mTorr to ~10-18 ms
+by 60-99 mTorr (`figures/study3_experimental_time.pdf`) -- the same pressure
+trend the 1-50 ms estimate was based on, now quantified shot by shot. Inverting
+the steady-state ratio through `br0_over_bw` gives `T_e` = 0.03-0.2 eV
+(`figures/study3_experimental_Te.pdf`) -- **an order of magnitude colder**
+than the 0.5-10 eV range parts 1-2 scanned, rising with both pressure and
+added DC-coil resistance (a weaker bias field). Take this `T_e` as an
+effective, single-point-model number rather than a literal measurement: the
+added-resistance dependence alone (weak bias field couples fast and deep,
+strong bias field couples slow and partial, and the effect disappears when
+the bias field is reversed) is a first-order effect this radial, bias-field-
+free model cannot represent at all, so some of what gets read as "`T_e`" here
+is really that missing physics.
+
 ## Where it stands
 
 `lambda = 11.07`, `Nr = 64`, both schemes run to 200 T so the comparison is like

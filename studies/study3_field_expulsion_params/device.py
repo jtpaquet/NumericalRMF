@@ -146,3 +146,16 @@ def choose_dt(lam, Nr, diff_c=0.3, cap=0.002):
 def choose_periods(tau_ms, factor=3.0, floor=30, ceil=500):
     """Periods to reach steady state: `factor` times the classical skin time."""
     return int(min(ceil, max(floor, np.ceil(factor*tau_ms/period_ms()))))
+
+
+# ------------------------------------------------- linear-limit (gamma -> 0)
+def br0_over_bw(lam):
+    """Steady |B_r(0)|/B_w in the gamma -> 0 limit, Hugrass 1985 Eq. (21).
+
+    A(r) = 2 gamma I1(kr)/(k I0(k)), k = (1-i)*lambda; near r = 0,
+    I1(kr) ~ kr/2 so A ~ gamma r/I0(k), and B_r(0) = dA/dr(0) = gamma/I0(k)
+    (see rmf_solver.RMFPenetration.profiles, which uses the same axis limit).
+    """
+    from scipy.special import iv
+    k = (1 - 1j)*lam
+    return 1.0/abs(iv(0, k))
