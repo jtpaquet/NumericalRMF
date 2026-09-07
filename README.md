@@ -235,6 +235,39 @@ density (ionisation) build-up itself than classical field diffusion into an
 already-formed plasma; reproducing it would need `n_e(t)`, or a cross-field
 (magnetised) resistivity that this isotropic-`eta` model does not have.
 
+**Ionisation-fraction extension.** Part 1 above assumed full single ionisation
+(`n_e = n_gas`); `4_ionization_fraction.py` instead scans the actual unknown --
+the fraction of the fill that a stochastic, cosmic-ray-seeded avalanche has
+ionised, `f_ion = n_e/n_gas in {1e-6, ..., 1e-1, 1}` -- since a lower `f_ion`
+raises `gamma` and can cross `gamma_c`, where Milroy's Eq. (17) penetration
+time *diverges*: in principle a slow, pressure-dependent mechanism, unlike
+part 1's threshold-free classical diffusion. Eq. (17) is validated against the
+real solver at this study's own lambdas first (previously only checked at
+Milroy's lambda = 11.07): matches to 8-10%, the same residual already noted
+above for Milroy's own case.
+
+```
+python 4_ionization_fraction.py   # Eq. (17) validation + the f_ion grid/window
+python 5_plot_ionization.py       # t_pen vs f_ion; critical f_ion(p) per T_e
+```
+
+None of the 7 requested `f_ion` land in the observed 1-50 ms window across the
+whole 5x5 (pressure, `T_e`) grid (`figures/study3_ionization_tau.pdf`) --
+`f_ion` is either deep subcritical (never penetrates; classical diffusion only,
+part 1's sub-ms result) or deep supercritical (penetrates in << 1 ms). What
+*would* work is a narrow band of `f_ion` straddling `gamma_c` where Eq. (17)'s
+divergence supplies 1-50 ms, but that band is razor-thin relative to the
+critical value itself (`figures/study3_ionization_window.pdf`): 0.03% of
+`f_crit` at `T_e` = 0.5 eV, widening to ~50% only by `T_e` = 10 eV. Landing in
+it at every pressure, as the data requires, needs either `T_e` on the high end
+of the stated range (eV, where the band is an order-1 fraction of `f_crit`) or
+a mechanism that pins `f_ion` near threshold rather than letting a stochastic
+avalanche land wherever it lands. Combined with part 1's ~1000x timescale
+miss in the sub-critical regime, both mechanisms this model can produce point
+the same way: **the 1-50 ms coupling time this device sees is most likely the
+avalanche's own statistical growth time**, not RMF field diffusion (linear or
+nonlinear) into an already-formed plasma.
+
 ## Where it stands
 
 `lambda = 11.07`, `Nr = 64`, both schemes run to 200 T so the comparison is like
