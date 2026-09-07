@@ -5,7 +5,7 @@ Two panels: gamma_c vs lambda with Milroy's Eqs. (14) and (15) overlaid, and the
 ratio to Eq. (15), which is where any systematic disagreement shows up.
 
     python plot_gamma_c.py
-    python plot_gamma_c.py --csv gamma_c_vs_lambda.csv --linear
+    python plot_gamma_c.py --csv gamma_c_vs_lambda.csv --log
 """
 import argparse
 import csv
@@ -41,7 +41,10 @@ def load(path):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument('--csv', default='gamma_c_vs_lambda.csv')
-    ap.add_argument('--linear', action='store_true', help='linear axes instead of log-log')
+    ap.add_argument('--log', action='store_true',
+                    help='log-log axes for the left panel instead of the '
+                         'linear gamma_c/lambda vs lambda axes Milroy uses '
+                         'in his Fig. 4')
     ap.add_argument('--out', default='gamma_c_vs_lambda')
     args = ap.parse_args()
 
@@ -55,22 +58,40 @@ def main():
     plot_options['font.size'] = 22
     mpl.rcParams.update(plot_options)
 
-    lam_f = np.logspace(np.log10(max(0.3, lam.min()*0.8)),
-                        np.log10(lam.max()*1.25), 400)
+    if args.log:
+        lam_f = np.logspace(np.log10(max(0.3, lam.min()*0.8)),
+                            np.log10(lam.max()*1.25), 400)
+    else:
+        lam_f = np.linspace(max(0.0, lam.min()*0.8), lam.max()*1.05, 400)
     eq = np.array([gamma_c_milroy(x) for x in lam_f])
 
     fig, (ax, ax2) = plt.subplots(1, 2, figsize=(18, 7.5))
 
-    ax.plot(lam_f, 1.12*lam_f, 'k--', lw=1.8,
-            label=r'Milroy Eq. (14), $1.12\lambda$ (expulsion)')
-    ax.plot(lam_f, eq, 'k-', lw=2.2, label='Milroy Eq. (15) (penetration)')
-    ax.errorbar(lam, gc, yerr=[gc - lo, hi - gc], fmt='o', color='tab:blue',
-                ms=8, lw=1.5, capsize=4, label='this code')
-    if not args.linear:
+    if args.log:
+        # gamma_c vs lambda, log-log
+        ax.plot(lam_f, 1.12*lam_f, 'k--', lw=1.8,
+                label=r'Milroy Eq. (14), $1.12\lambda$ (expulsion)')
+        ax.plot(lam_f, eq, 'k-', lw=2.2, label='Milroy Eq. (15) (penetration)')
+        ax.errorbar(lam, gc, yerr=[gc - lo, hi - gc], fmt='o', color='tab:blue',
+                    ms=8, lw=1.5, capsize=4, label='this code')
         ax.set_xscale('log')
         ax.set_yscale('log')
-    ax.set_xlabel(r'$\lambda = R/\delta$')
-    ax.set_ylabel(r'$\gamma_c$')
+        ax.set_xlabel(r'$\lambda = R/\delta$')
+        ax.set_ylabel(r'$\gamma_c$')
+    else:
+        # gamma_c/lambda vs lambda, linear - matches Milroy 1999 Fig. 4
+        with np.errstate(divide='ignore', invalid='ignore'):
+            eq_ratio = np.where(lam_f > 0, eq/np.where(lam_f > 0, lam_f, 1), np.nan)
+            eq14_ratio = np.full_like(lam_f, 1.12)
+        ax.plot(lam_f, eq14_ratio, 'k--', lw=1.8,
+                label=r'Milroy Eq. (14), $1.12$ (expulsion)')
+        ax.plot(lam_f, eq_ratio, 'k-', lw=2.2, label='Milroy Eq. (15) (penetration)')
+        ax.errorbar(lam, gc/lam, yerr=[(gc - lo)/lam, (hi - gc)/lam],
+                    fmt='D-', color='tab:blue', ms=8, lw=1.5, capsize=4,
+                    label='this code')
+        ax.set_xlim(0, lam.max()*1.05)
+        ax.set_xlabel(r'$\lambda$')
+        ax.set_ylabel(r'$\gamma_c/\lambda$')
     ax.grid(True, which='both', alpha=0.3)
     ax.legend(fontsize=17, loc='upper left')
 
@@ -78,8 +99,10 @@ def main():
     ax2.axhline(1.0, color='k', lw=2)
     ax2.axvline(6.5, color='gray', ls=':', lw=1.5)
     ax2.plot(lam, ratio, 'o-', color='tab:blue', ms=8, lw=1.5)
-    if not args.linear:
+    if args.log:
         ax2.set_xscale('log')
+    else:
+        ax2.set_xlim(0, lam.max()*1.05)
     ax2.set_xlabel(r'$\lambda = R/\delta$')
     ax2.set_ylabel(r'$\gamma_c$ / Milroy Eq. (15)')
     ax2.grid(True, which='both', alpha=0.3)
