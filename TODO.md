@@ -45,6 +45,16 @@ papers. `COMPARISON.md` has the evidence for each item.
 - [x] **10. Electron inertia.** Correctly dropped: `omega/nu_ei ~ 2e-3` for
   Milroy's parameters. Hugrass & Grimm only retain it when `omega <~ nu_ei`.
 
+- [x] **11. Wire up `B_z0`.** `rmf_solver.py` takes `bz0` and applies it at
+  `b(1)`, replacing the hardcoded 0. Result: no effect, at all, on any
+  diagnostic (`studies/study4_dc_bias_field/`) -- `rhs()` only ever uses
+  gradients of `b` (`dbdr(b)` in `dA/dt`, differences in `db/dt`), so
+  `b(1) = bz0` is an exact relabelling and `alpha` is bz0-independent to
+  float round-off, for every gamma and lambda tried. This was the proposed
+  fix for study 3's added-resistance (DC bias field) coupling asymmetry;
+  it does not work, and cannot by construction, not because of a missing
+  parameter.
+
 ## Next
 
 - [ ] **5b. gamma_c vs lambda (Milroy Fig. 4).** Study 2 is written
@@ -93,6 +103,19 @@ papers. `COMPARISON.md` has the evidence for each item.
   lines are plotted in the co-rotating frame now, but nobody has put the two
   figures next to each other at his four times.
 
+- [ ] **DC-bias-field / RMF-handedness coupling (study 3, real shots).** The
+  added-resistance scan shows weak bias field coupling fast and deep, strong
+  bias field (0-2 Ω) coupling slow and partial (sometimes relaxing back
+  toward vacuum mid-shot), and the effect vanishing under polarity reversal —
+  classic FRC field-reversal phenomenology. Item 11 shows the direct fix
+  (nonzero `B_z0`) is a dead end in this truncation: the reduced equations
+  are exactly invariant under a uniform shift of `B_z`, so no boundary value
+  can produce this. Reproducing it needs real axial structure (finite
+  length, end effects — a genuine magnetic-null/reconnection topology) or a
+  force-balance equation sensitive to the *absolute* `B_z`, not just its
+  gradient — i.e. a model beyond the fixed-ion, Ohm's-law-only reduction
+  used throughout this project. Not attempted here.
+
 ## Not doing
 
 - **8. Flux-conserving rings.** Hugrass & Grimm close the system with rings at
@@ -100,7 +123,8 @@ papers. `COMPARISON.md` has the evidence for each item.
   they show smaller `b` gives faster penetration. Milroy instead holds
   `B_z(R) = B_z0`, which is what this code does — and our device has no flux
   conserver, so Milroy's condition is also the physically right one for the
-  eventual application.
+  eventual application. (`bz0` is now a settable parameter, item 11 — but see
+  the open question above: in this truncation it has no effect either way.)
 
 ## Housekeeping
 
