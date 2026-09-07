@@ -82,10 +82,16 @@ def main():
     # -------------------------------------------------------------- settling time
     fig, ax = plt.subplots(figsize=(8, 6))
     t_settle = as_array(ps, Tes, grid, 't_settle_ms')
+    contours = [c for c in TARGET_TIMES_MS if t_settle.min() <= c <= t_settle.max()]
     im = heatmap(ax, ps, Tes, t_settle, cmap='viridis', log=True,
-                 contours=[10.0, 25.0], clabel_fmt='%g ms')
+                 contours=contours, clabel_fmt='%g ms')
     cb = fig.colorbar(im, ax=ax, label=r'$\log_{10}(t_{settle}$ / ms$)$')
     ax.set_title('Predicted field-settling time vs. the observed 10-25 ms')
+    if not contours:
+        ax.text(0.5, -0.16, f'model: {t_settle.min():.3f}-{t_settle.max():.3f} ms '
+                f'over the whole box -- {TARGET_TIMES_MS[0]:g}-{TARGET_TIMES_MS[1]:g} ms '
+                f'is off this scale by ~{TARGET_TIMES_MS[0]/t_settle.max():.0f}x',
+                transform=ax.transAxes, ha='center', fontsize=13, color='crimson')
     out = paths.figure('study3_settling_time.pdf')
     plt.tight_layout()
     plt.savefig(out, bbox_inches='tight')

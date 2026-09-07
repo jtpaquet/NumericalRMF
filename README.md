@@ -197,6 +197,44 @@ python gamma_c_scan.py --lam-max 20
 python plot_gamma_c.py
 ```
 
+### 3 — `studies/study3_field_expulsion_params/` : field expulsion vs. fill pressure and T_e
+
+Maps the pre-ionization state -- argon at 25 C, 10-100 mTorr fill, giving
+`n_e` via the ideal-gas density of the fill (full single ionisation assumed)
+-- and an independently scanned `T_e = 0.5-10 eV` onto `(lambda, gamma)`
+through Spitzer resistivity (`device.py`), using this device's own numbers:
+`f_RMF = 250 kHz`, `R = 10 cm`, `B_w = 6 G` vacuum antenna field (cross-checked
+against 0.163 G/A x 35 A = 5.7 G from the coil calibration).
+
+`gamma/gamma_c` stays below 2% everywhere in the box (`figures/study3_gamma_ratio.pdf`)
+-- at `B_w = 6 G` this device never leaves the linear (classical skin-effect)
+regime, so `1_scan_grid.py` runs the real solver once per `T_e` at a small
+reference `gamma` and checks gamma-independence directly against the largest
+`gamma` actually reached in the grid (0.02% difference).
+
+|                                     | model                                    | observed          |
+|---|---|---|
+| field-settling time                | 0.008-0.03 ms, set by `T_e` alone        | 10-25 ms          |
+| steady wall - centre `\|B_r\|` split | matches measurement at `T_e` ~ 3-4 eV    | (1.6-1.0)/6 = 0.11 |
+| steady wall `\|B_r\|` alone          | matches measurement at `T_e` ~ 0.7-0.8 eV | 1.6/6 = 0.27      |
+
+```
+python 1_scan_grid.py    # the solver runs + results/study3_grid.csv
+python 2_plot_grid.py    # gamma/gamma_c, settling time, screening heatmaps
+python 3_time_traces.py  # |B_r(R)-B_r(0)| vs real time, against 10/25 ms
+```
+
+Classical Spitzer-resistivity diffusion reproduces the *steady* wall and
+centre fields, but only at two different, mutually inconsistent values of
+`T_e` -- and it misses the *timescale* by ~1000x everywhere in the box,
+because the pressure (density) barely matters here: with `gamma` this small,
+only `T_e` (through `eta` and `lambda`) sets the field's own diffusion time,
+and that time is always sub-millisecond for `T_e` = 0.5-10 eV. The observed
+25 ms field-expulsion time is therefore more likely tracking the post-breakdown
+density (ionisation) build-up itself than classical field diffusion into an
+already-formed plasma; reproducing it would need `n_e(t)`, or a cross-field
+(magnetised) resistivity that this isotropic-`eta` model does not have.
+
 ## Where it stands
 
 `lambda = 11.07`, `Nr = 64`, both schemes run to 200 T so the comparison is like
