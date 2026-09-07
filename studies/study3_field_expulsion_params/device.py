@@ -67,14 +67,24 @@ E_CHARGE = 1.602176634e-19
 
 
 def density_from_pressure(p_mtorr, T_K=T_ROOM_K):
-    """Neutral fill density (m^-3) from pressure (mTorr) via the ideal gas law.
-
-    Used as the plasma density n_e, i.e. assuming full single ionisation of
-    the pre-breakdown fill -- the standard order-of-magnitude estimate when
-    the actual ionisation fraction is not otherwise known.
-    """
+    """Neutral fill density (m^-3) from pressure (mTorr) via the ideal gas law."""
     p_pa = p_mtorr*1e-3*TORR_TO_PA
     return p_pa/(K_B*T_K)
+
+
+# Candidate ionisation fractions n_e/n_gas: a cosmic-ray-seeded avalanche is a
+# statistical process, so this is scanned rather than assumed to be 1 (full
+# single ionisation, the study3_grid.csv default).
+F_ION = np.array([1e-6, 1e-5, 1e-4, 1e-3, 1e-2, 1e-1, 1.0])
+
+# the (pressure, T_e) grid shared by 1_scan_grid.py and 4_ionization_fraction.py
+P_MTORR_GRID = np.geomspace(10.0, 100.0, 5)
+TE_EV_GRID = np.geomspace(0.5, 10.0, 5)
+
+
+def electron_density(p_mtorr, f_ion, T_K=T_ROOM_K):
+    """n_e = f_ion * (neutral fill density), f_ion in F_ION."""
+    return f_ion*density_from_pressure(p_mtorr, T_K)
 
 
 def coulomb_log_ei(n_m3, Te_eV, Z=Z_ARGON):

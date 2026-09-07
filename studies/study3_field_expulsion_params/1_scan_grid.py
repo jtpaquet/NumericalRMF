@@ -54,8 +54,8 @@ import paths
 import device as dev
 from rmf_solver import RMFPenetration, gamma_c, TWO_PI
 
-P_MTORR = np.geomspace(10.0, 100.0, 5)
-TE_EV = np.geomspace(0.5, 10.0, 5)
+P_MTORR = dev.P_MTORR_GRID
+TE_EV = dev.TE_EV_GRID
 GAM_REF = 0.01                        # nominal small gamma for the reference runs
 
 
