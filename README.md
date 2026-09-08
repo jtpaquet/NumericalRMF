@@ -75,7 +75,7 @@ $$
 
 $$
 \frac{\partial b}{\partial t} = \frac{1}{2\lambda^2 r}\frac{d}{dr}\left[r b' + \frac{P}{2\lambda^2}\right],
-\qquad P = \operatorname{Im}\left(L[A]\,\bar{A}\right)
+\qquad P = \Im\left(L[A]\,\bar{A}\right)
 $$
 
 $$
