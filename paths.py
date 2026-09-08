@@ -1,14 +1,14 @@
 """Output locations, anchored to the repo root so scripts run from anywhere.
 
-    results/    pickles and tabulated data
-    figures/    pdf and png
-    figures/animations/   mp4
+    results/                pickles and tabulated data
+    results/figures/        pdf and png
+    results/figures/animations/   mp4
 """
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 RESULTS = ROOT / 'results'
-FIGURES = ROOT / 'figures'
+FIGURES = RESULTS / 'figures'
 ANIMATIONS = FIGURES / 'animations'
 
 

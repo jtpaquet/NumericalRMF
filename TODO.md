@@ -131,6 +131,11 @@ papers. `COMPARISON.md` has the evidence for each item.
 - [x] Outputs moved out of the repo root into `results/` and `figures/`, routed
   through `paths.py`. The duplicate 21 MB pickle under `animation/` is gone.
 
+- [x] `figures/` folded into `results/figures/` (one output root); `nr32_fix.py`
+  removed (never imported; its scheme lives on as `legacy=True`); `utils.py`
+  trimmed to the matplotlib style dict, dropping ~300 lines of unused
+  signal-processing helpers; added `run.py` for a single custom-parameter run.
+
 - [x] Scripts grouped under `studies/study1_alpha_penetration/`, with
   `5_all_tests.py` added to run all four and overlay them.
 

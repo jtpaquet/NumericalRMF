@@ -136,22 +136,21 @@ $\alpha_s$.
 
 ```
 rmf_solver.py          the solver
-paths.py               where outputs go (results/ and figures/)
-run_milroy.py          the three reference gammas
+paths.py               where outputs go (results/, results/figures/)
+run.py                 one case at any gamma/lambda/Nr/dt (see below)
+run_milroy.py          the three reference gammas at Milroy's production settings
 plot.py                alpha(t), before/after, field lines, radial profiles
 validate_numerics.py   analytic linear limit, ramp cost, operator order,
                        ablation, grid convergence
 study_thresholds.py    ascending/descending gamma sweeps for gamma_c
 utils.py               matplotlib style
-nr32_fix.py            the original script, kept as the provenance of
-                       results/all_results_Nr*.pkl
 
 studies/               numbered studies (see below)
 animation/             mp4 generation
 articles/              the source papers
-results/               pickles and tabulated data       (all outputs land here)
-figures/               pdf and png
-figures/animations/    mp4
+results/                     pickles and tabulated data   (all outputs land here)
+results/figures/             pdf and png
+results/figures/animations/  mp4
 ```
 
 Outputs are written through `paths.py`, which anchors them to the repo root, so
@@ -168,8 +167,15 @@ python study_thresholds.py
 
 `run_milroy.py` always sweeps Milroy's three reference gammas at
 $N_r = 64$, $dt = 0.002$. For one case at your own resolution and time step,
-drive `RMFPenetration` directly, e.g. $\gamma = 16.6$, $\lambda = 11.07$,
-$N_r = 32$, $dt = 0.001$:
+use `run.py`, e.g. $\gamma = 16.6$, $\lambda = 11.07$, $N_r = 32$, $dt = 0.001$:
+
+```
+python run.py --gamma 16.6 --lam 11.07 --nr 32 --dt 0.001
+```
+
+which prints $\alpha_s$ and $t_{pen}$; add `--save NAME` to also pickle the
+run to `results/NAME.pkl`. Driving `RMFPenetration` directly is the same
+thing without the CLI:
 
 ```python
 from rmf_solver import RMFPenetration
@@ -196,13 +202,13 @@ only in the discretisation and the turn-on ramp, so each effect can be isolated:
 
 | script | discretisation | `rise_time` |
 |---|---|---|
-| `1_legacy_ramp0.py` | original (`nr32_fix.py`) | 0 |
+| `1_legacy_ramp0.py` | original (`nr32_fix.py`, removed; reproduced by `legacy=True`) | 0 |
 | `2_legacy_ramp3.py` | original | 3 T |
 | `3_fixed_ramp0.py` | corrected (`rmf_solver.py`) | 0 |
 | `4_fixed_ramp3.py` | corrected | 3 T |
 | `5_all_tests.py` | runs all four and overlays them, one panel per $\gamma$ | |
 
-Each writes `results/alpha_<label>.pkl` and `figures/alpha_<label>.{pdf,png}`,
+Each writes `results/alpha_<label>.pkl` and `results/figures/alpha_<label>.{pdf,png}`,
 and prints $\alpha_s$ and $t_{pen}$ against Milroy's numbers. Common options
 `--nr`, `--dt`, `--periods`, `--no-figure`, plus on the first four
 
@@ -254,7 +260,7 @@ through Spitzer resistivity (`device.py`), using this device's own numbers:
 $f_{RMF} = 250$ kHz, $R = 10$ cm, $B_w = 6$ G vacuum antenna field (cross-checked
 against $0.163\ \text{G/A} \times 35\ \text{A} = 5.7$ G from the coil calibration).
 
-$\gamma/\gamma_c$ stays below 2% everywhere in the box (`figures/study3_gamma_ratio.pdf`)
+$\gamma/\gamma_c$ stays below 2% everywhere in the box (`results/figures/study3_gamma_ratio.pdf`)
 -- at $B_w = 6$ G this device never leaves the linear (classical skin-effect)
 regime, so `1_scan_grid.py` runs the real solver once per $T_e$ at a small
 reference $\gamma$ and checks $\gamma$-independence directly against the
@@ -301,12 +307,12 @@ python 5_plot_ionization.py       # t_pen vs f_ion; critical f_ion(p) per T_e
 ```
 
 None of the 7 requested $f_{ion}$ land in the observed 1-50 ms window across
-the whole 5x5 (pressure, $T_e$) grid (`figures/study3_ionization_tau.pdf`) --
+the whole 5x5 (pressure, $T_e$) grid (`results/figures/study3_ionization_tau.pdf`) --
 $f_{ion}$ is either deep subcritical (never penetrates; classical diffusion
 only, part 1's sub-ms result) or deep supercritical (penetrates in << 1 ms).
 What *would* work is a narrow band of $f_{ion}$ straddling $\gamma_c$ where
 Eq. (17)'s divergence supplies 1-50 ms, but that band is razor-thin relative
-to the critical value itself (`figures/study3_ionization_window.pdf`): 0.03%
+to the critical value itself (`results/figures/study3_ionization_window.pdf`): 0.03%
 of $f_{crit}$ at $T_e = 0.5$ eV, widening to ~50% only by $T_e = 10$ eV.
 Landing in it at every pressure, as the data requires, needs either $T_e$ on
 the high end of the stated range (eV, where the band is an order-1 fraction
@@ -333,10 +339,10 @@ python 7_plot_experimental.py        # inferred Te and coupling time vs p and oh
 ```
 
 The 90%-of-plateau coupling time rises from ~1.6 ms at 7-22 mTorr to ~10-18 ms
-by 60-99 mTorr (`figures/study3_experimental_time.pdf`) -- the same pressure
+by 60-99 mTorr (`results/figures/study3_experimental_time.pdf`) -- the same pressure
 trend the 1-50 ms estimate was based on, now quantified shot by shot. Inverting
 the steady-state ratio through `br0_over_bw` gives $T_e = 0.03\text{-}0.2$ eV
-(`figures/study3_experimental_Te.pdf`) -- **an order of magnitude colder**
+(`results/figures/study3_experimental_Te.pdf`) -- **an order of magnitude colder**
 than the 0.5-10 eV range parts 1-2 scanned, rising with both pressure and
 added DC-coil resistance (a weaker bias field). Take this $T_e$ as an
 effective, single-point-model number rather than a literal measurement: the
@@ -368,7 +374,7 @@ Milroy's $\lambda = 11.07$ and his three reference $\gamma$s (one
 sub-critical, two super-critical), $\alpha(t)$ at $b_{z0} \in
 \{0.05, 0.3, -0.3, 1, -1\}$ matches $b_{z0} = 0$ to float round-off
 ($\sim 10^{-14}$) at every point of a 60-period run
-(`figures/study4_bz0_invariance.pdf`).
+(`results/figures/study4_bz0_invariance.pdf`).
 
 ```
 python 1_bz0_invariance.py
@@ -405,7 +411,7 @@ like for like:
 | 16.6 | 1.097 | 0.990 / **0.992** / 0.98 | 46.8 T / **40.9 T** / 40 T |
 | 18.2 | 1.203 | 0.992 / **0.994** / 0.98 | 29.8 T / **24.4 T** / 27 T |
 
-($t_{pen}$ at 95% of $\alpha_s$. Figure: `figures/alpha_vs_time_comparison.pdf`.)
+($t_{pen}$ at 95% of $\alpha_s$. Figure: `results/figures/alpha_vs_time_comparison.pdf`.)
 
 Note that $\gamma_c = 15.13$ here is Milroy's Eq. (15) penetration threshold,
 not $1.12\lambda = 12.40$, which is his Eq. (14) value for *expulsion* of an

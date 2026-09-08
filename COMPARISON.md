@@ -9,6 +9,11 @@ written out in Hugrass, Aust. J. Phys. **38**, 157 (1985).
 Reference case: R = 10 cm, n = 0.333e20 m^-3, B_w = 90/100/110 G,
 omega = 2.2e5 s^-1, T_e = 5 eV  ->  lambda = 11.07, gamma = 14.9/16.6/18.2.
 
+`nr32_fix.py`, the original script this comparison is against, has since been
+removed from the tree (it was never imported by anything); its exact
+discretisation is preserved and runnable as `RMFPenetration(..., legacy=True)`
+in `rmf_solver.py`, which is what `studies/study1_alpha_penetration/` now uses.
+
 ## What the code actually integrates
 
 Milroy's Eqs. (10)-(13), truncated to the n = 0 component of B_z and the n = 1
