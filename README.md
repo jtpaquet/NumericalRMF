@@ -164,6 +164,29 @@ python validate_numerics.py
 python study_thresholds.py
 ```
 
+### Running a single case
+
+`run_milroy.py` always sweeps Milroy's three reference gammas at
+$N_r = 64$, $dt = 0.002$. For one case at your own resolution and time step,
+drive `RMFPenetration` directly, e.g. $\gamma = 16.6$, $\lambda = 11.07$,
+$N_r = 32$, $dt = 0.001$:
+
+```python
+from rmf_solver import RMFPenetration
+
+sim = RMFPenetration(Nr=32, lam=11.07, gam=16.6)
+t, alpha, snaps = sim.run(n_periods=200, dt=0.001)
+print(alpha[-1])   # alpha_s, the steady penetration factor
+```
+
+`studies/study1_alpha_penetration/3_fixed_ramp0.py` runs the same corrected
+scheme over all three reference gammas at once and accepts `--nr`/`--dt`/
+`--periods` from the command line, e.g.
+
+```
+python studies/study1_alpha_penetration/3_fixed_ramp0.py --nr 32 --dt 0.001
+```
+
 ## Studies
 
 ### 1 — `studies/study1_alpha_penetration/` : $\alpha$ vs time, penetration tests
